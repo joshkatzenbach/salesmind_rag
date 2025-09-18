@@ -15,16 +15,8 @@ class ChunkingService:
     @staticmethod 
     def run_chunk_pipeline(transcript : Transcript, db : Session):
         chunk_texts = ChunkingService.chunk_text(transcript.transcript_text)
-        embeddings = ChunkingService.get_embeddings(chunk_texts)
-        chunks : list[Chunk] = []
-        
-        for index, chunk_text in enumerate(chunk_texts, start=0):
-            chunks.append(Chunk(
-                transcript_id=transcript.id,
-                chunk_index=index,
-                chunk_text=chunk_text,
-                embedding=embeddings[index]
-            ))
+        embeddings = ChunkingService.batch_embeddings(chunk_texts)
+        chunks = ChunkingService.create_chunks( chunk_texts, embeddings)
         db.add_all(chunks)
         db.commit()
 
@@ -49,7 +41,26 @@ class ChunkingService:
         embeddings = [data.embedding for data in response.data]
         return embeddings
 
+
     def batch_embeddings(chunk_texts : list[str]) -> list[list[float]]:
-        batch_size = MAX_BATCH_TOKENS // CHUNK_SIZE;
-        currentIndex = 0
+        batch_size : int = MAX_BATCH_TOKENS // CHUNK_SIZE;
+        num_chunks : int = len(chunk_texts)
+        embeddings : list[list[float]] = []
         
+        for i in range(0, num_chunks, batch_size):
+            upperIndex = i + batch_size if i + batch_size < num_chunks else num_chunks
+            batch_texts = chunk_texts[i:upperIndex]
+            batch_embeddings = ChunkingService.get_embeddings(batch_texts)
+            embeddings.extend(batch_embeddings)
+        return embeddings
+
+    def create_chunks(chunk_texts : list[str], embeddings : list[list[float]], transcript_id : int) -> list[Chunk]:
+        chunks : list[Chunk] = []
+        for index, chunk_texts in enumerate(chunk_texts):
+            chunks.append(Chunk(
+                chunk_text=chunk_texts[index],
+                embedding=embeddings[index],
+                transcript_id=transcript_id,
+                chunk_index=index
+            ))
+        return chunks
