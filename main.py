@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
 import json
+from query_service import QueryService
 from sqlalchemy.orm import Session
 from chunking_service import ChunkingService
 from db_config import get_db
@@ -29,6 +30,12 @@ class DocumentMetadata(BaseModel):
     mediaType: Optional[str] = None
     provideLinkToSearcher: bool = False
 
+class QueryRequest(BaseModel):
+    question: str
+
+class ToggleActiveRequest(BaseModel):
+    active: bool
+
 @app.get("/")
 def read_root():
     return {"message": "Hello World"}
@@ -37,22 +44,116 @@ def read_root():
 def health_check():
     return {"status": "healthy"}
 
-@app.post("/query")
-def query_documents(query: str):
+@app.get("/transcripts/metadata")
+def get_transcript_metadata(db: Session = Depends(get_db)):
+    try:
+        # Query only the metadata fields, excluding transcript_text
+        transcripts = db.query(
+            Transcript.id,
+            Transcript.created_at,
+            Transcript.updated_at,
+            Transcript.trainer_name,
+            Transcript.media_type,
+            Transcript.source_url,
+            Transcript.provide_link_to_searcher,
+            Transcript.title,
+            Transcript.active
+        ).all()
+        
+        # Convert to list of dictionaries
+        metadata = []
+        for transcript in transcripts:
+            metadata.append({
+                "id": transcript.id,
+                "created_at": transcript.created_at.isoformat() if transcript.created_at else None,
+                "updated_at": transcript.updated_at.isoformat() if transcript.updated_at else None,
+                "trainer_name": transcript.trainer_name,
+                "media_type": transcript.media_type,
+                "source_url": transcript.source_url,
+                "provide_link_to_searcher": transcript.provide_link_to_searcher,
+                "title": transcript.title,
+                "active": transcript.active
+            })
+        
+        return {
+            "transcripts": metadata,
+            "count": len(metadata),
+            "status": "success"
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error fetching transcript metadata: {str(e)}"
+        )
+
+@app.patch("/transcripts/{transcript_id}/active")
+def toggle_transcript_active(
+    transcript_id: int, 
+    request: ToggleActiveRequest, 
+    db: Session = Depends(get_db)
+):
     """
-    Query endpoint for searching documents.
+    Toggle the active status of a transcript.
     
     Args:
-        query: The user's search query string
+        transcript_id: ID of the transcript to update
+        request: ToggleActiveRequest containing the new active status
+        db: Database session
         
     Returns:
-        Basic response (logic to be implemented)
+        Updated transcript metadata
     """
-    return {
-        "query": query,
-        "message": "Query endpoint ready - logic to be implemented",
-        "status": "success"
-    }
+    try:
+        # Find the transcript
+        transcript = db.query(Transcript).filter(Transcript.id == transcript_id).first()
+        
+        if not transcript:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Transcript with ID {transcript_id} not found"
+            )
+        
+        # Update the active status
+        transcript.active = request.active
+        db.commit()
+        db.refresh(transcript)
+        
+        return {
+            "id": transcript.id,
+            "active": transcript.active,
+            "title": transcript.title,
+            "trainer_name": transcript.trainer_name,
+            "message": f"Transcript {'activated' if request.active else 'deactivated'} successfully",
+            "status": "success"
+        }
+        
+    except HTTPException:
+        # Re-raise HTTP exceptions (like 404)
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error updating transcript status: {str(e)}"
+        )
+
+@app.post("/query")
+def query_documents(request: QueryRequest, db: Session = Depends(get_db)):
+    try:
+        answer = QueryService.process_query(request.question, db)
+        return {
+            "question": request.question,
+            "answer": answer,
+            "message": "Query endpoint ready - logic to be implemented",
+            "status": "success"
+        }
+    except Exception as e:
+        # Handle query processing errors
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error processing query: {str(e)}"
+        )
 
 @app.post("/upload")
 async def upload_document(

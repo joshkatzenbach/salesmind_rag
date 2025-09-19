@@ -3,6 +3,7 @@ Chunk model for storing text chunks and their embeddings.
 """
 
 from sqlalchemy import Column, Integer, Text, ForeignKey, Index
+from sqlalchemy.orm import relationship
 from pgvector.sqlalchemy import Vector
 from .base import Base
 
@@ -16,6 +17,9 @@ class Chunk(Base):
     chunk_index = Column(Integer, nullable=False)
     chunk_text = Column(Text, nullable=False)
     embedding = Column(Vector(1536), nullable=False)  
+    
+    # Relationship to transcript
+    transcript = relationship("Transcript", back_populates="chunks")
     
     # Create index on transcript_id and chunk_index for efficient queries
     __table_args__ = (

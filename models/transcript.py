@@ -1,5 +1,6 @@
 from datetime import datetime
 from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean
+from sqlalchemy.orm import relationship
 from .base import Base
 
 class Transcript(Base):
@@ -24,6 +25,13 @@ class Transcript(Base):
     media_type = Column(String(50), nullable=True)  # maps to mediaType (video, document, etc)
     source_url = Column(String(500), nullable=True)  # maps to sourceUrl
     provide_link_to_searcher = Column(Boolean, default=False, nullable=False)  # maps to provideLinkToSearcher
+    
+    # Additional fields
+    title = Column(String(255), nullable=True)  # Optional title for the transcript
+    active = Column(Boolean, default=True, nullable=False)  # Whether the transcript is active/visible
+    
+    # Relationship to chunks
+    chunks = relationship("Chunk", back_populates="transcript", cascade="all, delete-orphan")
     
     def __repr__(self) -> str:
         return f"<Transcript(id={self.id}, trainer_name='{self.trainer_name}', media_type='{self.media_type}', created_at='{self.created_at}')>"
