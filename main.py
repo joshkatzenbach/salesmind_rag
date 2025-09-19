@@ -1,9 +1,11 @@
+import traceback
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
 import json
 from sqlalchemy.orm import Session
+from chunking_service import ChunkingService
 from db_config import get_db
 from models import Transcript
 from file_processor import FileProcessor
@@ -34,6 +36,23 @@ def read_root():
 @app.get("/health")
 def health_check():
     return {"status": "healthy"}
+
+@app.post("/query")
+def query_documents(query: str):
+    """
+    Query endpoint for searching documents.
+    
+    Args:
+        query: The user's search query string
+        
+    Returns:
+        Basic response (logic to be implemented)
+    """
+    return {
+        "query": query,
+        "message": "Query endpoint ready - logic to be implemented",
+        "status": "success"
+    }
 
 @app.post("/upload")
 async def upload_document(
@@ -79,6 +98,8 @@ async def upload_document(
         db.add(transcript)
         db.commit()
         db.refresh(transcript)
+
+        ChunkingService.run_chunk_pipeline(transcript, db)
         
         return {
             "message": "File uploaded and processed successfully",
@@ -97,7 +118,10 @@ async def upload_document(
         raise
     except Exception as e:
         db.rollback()
+        print(e)
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
+
 
 
 

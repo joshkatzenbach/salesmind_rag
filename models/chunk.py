@@ -4,7 +4,6 @@ Chunk model for storing text chunks and their embeddings.
 
 from sqlalchemy import Column, Integer, Text, ForeignKey, Index
 from pgvector.sqlalchemy import Vector
-from sqlalchemy.dialects.postgresql import ARRAY, REAL
 from .base import Base
 
 class Chunk(Base):
