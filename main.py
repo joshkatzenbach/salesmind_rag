@@ -149,6 +149,9 @@ def query_documents(request: QueryRequest, db: Session = Depends(get_db)):
             "status": "success"
         }
     except Exception as e:
+        
+        traceback.print_exc()
+        print(e)
         # Handle query processing errors
         raise HTTPException(
             status_code=500,
