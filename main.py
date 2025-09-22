@@ -138,6 +138,61 @@ def toggle_transcript_active(
             detail=f"Error updating transcript status: {str(e)}"
         )
 
+@app.delete("/transcripts/{transcript_id}")
+def delete_transcript(transcript_id: int, db: Session = Depends(get_db)):
+    """
+    Delete a transcript and all its associated chunks.
+    
+    Args:
+        transcript_id: ID of the transcript to delete
+        db: Database session
+        
+    Returns:
+        Success message with deleted transcript info
+    """
+    try:
+        # Find the transcript
+        transcript = db.query(Transcript).filter(Transcript.id == transcript_id).first()
+        
+        if not transcript:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Transcript with ID {transcript_id} not found"
+            )
+        
+        # Store transcript info before deletion for response
+        transcript_info = {
+            "id": transcript.id,
+            "title": transcript.title,
+            "trainer_name": transcript.trainer_name,
+            "media_type": transcript.media_type,
+            "created_at": transcript.created_at.isoformat() if transcript.created_at else None
+        }
+        
+        # Count chunks before deletion
+        chunk_count = len(transcript.chunks)
+        
+        # Delete the transcript (chunks will be automatically deleted due to cascade)
+        db.delete(transcript)
+        db.commit()
+        
+        return {
+            "message": f"Transcript and {chunk_count} associated chunks deleted successfully",
+            "deleted_transcript": transcript_info,
+            "chunks_deleted": chunk_count,
+            "status": "success"
+        }
+        
+    except HTTPException:
+        # Re-raise HTTP exceptions (like 404)
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error deleting transcript: {str(e)}"
+        )
+
 @app.post("/query")
 def query_documents(request: QueryRequest, db: Session = Depends(get_db)):
     try:
