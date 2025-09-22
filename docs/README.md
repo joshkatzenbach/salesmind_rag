@@ -139,8 +139,10 @@ GET /
 The application supports separate configurations for local development and production:
 
 ### Environment Files
-- **`env.local`** - Local development database (PostgreSQL)
-- **`env.production`** - Production database (Supabase)
+- **`config/env.local`** - Local development database (PostgreSQL)
+- **`config/env.production`** - Production database (Render)
+- **`config/env.local.template`** - Template for local environment
+- **`config/env.production.template`** - Template for production environment
 
 ### Setup Environment Files
 
