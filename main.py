@@ -4,12 +4,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
 import json
-from query_service import QueryService
+from services.query_service import QueryService
 from sqlalchemy.orm import Session
-from chunking_service import ChunkingService
-from db_config import get_db
+from services.chunking_service import ChunkingService
+from config.db_config import get_db
 from models import Transcript
-from file_processor import FileProcessor
+from services.file_processor import FileProcessor
 
 # FastAPI app
 app = FastAPI(title="SalesMind RAG API", version="1.0.0")

@@ -4,8 +4,22 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
-load_dotenv()
+# Load environment variables from appropriate .env file
+import os
+from pathlib import Path
+
+# Get the project root directory
+project_root = Path(__file__).parent.parent
+env = os.getenv("ENVIRONMENT", "local")
+env_file = project_root / f"config/env.{env}"
+
+if env_file.exists():
+    load_dotenv(env_file)
+else:
+    # Fallback to .env in project root
+    fallback_env = project_root / ".env"
+    if fallback_env.exists():
+        load_dotenv(fallback_env)
 
 # Database configuration from environment variables
 DB_HOST = os.getenv("DB_HOST", "localhost")

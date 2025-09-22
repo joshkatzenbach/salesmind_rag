@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import select
 from models.chunk import Chunk
 import os
-from chunking_service import ChunkingService
+from .chunking_service import ChunkingService
 
 
 
