@@ -238,20 +238,30 @@ ENVIRONMENT=production python main.py
 
 ## Database Migrations
 
-### Individual Database Migrations
-```bash
-# Migrate local database only
-python scripts/migrate_local.py
+### Unified Migration Management
 
-# Migrate production database only
-python scripts/migrate_production.py
+**Single Command for Everything:**
+```bash
+# Generate migration from production schema and apply to both databases
+python scripts/migrate.py upgrade -m "Add new column to users table"
+
+# Apply existing migrations to both databases
+python scripts/migrate.py migrate
+
+# Generate migration from production schema only
+python scripts/migrate.py generate -m "Add new column to users table"
+
+# Check migration status for both databases
+python scripts/migrate.py status
 ```
 
-### Migrate Both Databases
-```bash
-# Migrate both local and production databases
-python scripts/migrate_both.py
-```
+**How It Works:**
+1. **Migration Generation:** Always based on production database schema
+2. **Migration Application:** Applied to both local and production databases
+3. **Single Source of Truth:** Production database defines the schema
+4. **Consistent State:** Both databases stay in sync
+
+**Note:** The message parameter is optional and defaults to "Auto-generated migration".
 
 ### Manual Migration Commands
 ```bash
@@ -260,11 +270,8 @@ ENVIRONMENT=local alembic upgrade head
 
 # Production database
 ENVIRONMENT=production alembic upgrade head
-```
 
-### Create New Migrations
-```bash
-# Create a new migration (run from project root)
+# Generate new migration
 alembic revision --autogenerate -m "Description of changes"
 ```
 
@@ -320,7 +327,7 @@ For other deployment platforms, ensure you set the `ENVIRONMENT=production` vari
 
 - **API Documentation**: http://localhost:8000/docs
 - **ReDoc**: http://localhost:8000/redoc
-- **Database Migrations**: Use `alembic revision --autogenerate -m "description"` to create new migrations
+- **Database Migrations**: Use `python scripts/migrate.py upgrade -m "description"` for unified migration management
 
 ## Project Structure
 
@@ -370,9 +377,18 @@ python scripts/run_production.py # Production mode
 
 ### Migration Commands
 ```bash
-python scripts/migrate_local.py     # Local database only
-python scripts/migrate_production.py # Production database only
-python scripts/migrate_both.py      # Both databases
+# Apply migrations
+python scripts/migrate_local.py migrate     # Local database only
+python scripts/migrate_production.py migrate # Production database only
+python scripts/migrate_both.py migrate      # Both databases
+
+# Generate new migrations
+python scripts/migrate_local.py generate     # Local only (default message)
+python scripts/migrate_local.py generate -m "Description"     # Local with custom message
+python scripts/migrate_production.py generate # Production only (default message)
+python scripts/migrate_production.py generate -m "Description" # Production with custom message
+python scripts/migrate_both.py generate      # Both databases (default message)
+python scripts/migrate_both.py generate -m "Description"      # Both with custom message
 ```
 
 ### Environment Files

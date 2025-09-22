@@ -34,6 +34,19 @@ DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NA
 # Create SQLAlchemy engine
 engine = create_engine(DATABASE_URL)
 
+# Initialize pgvector extension
+def init_pgvector():
+    """Initialize pgvector extension in the database."""
+    try:
+        with engine.begin() as conn:
+            conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
+        print("✅ pgvector extension initialized successfully")
+    except Exception as e:
+        print(f"⚠️  Warning: Could not initialize pgvector extension: {e}")
+
+# Initialize pgvector
+init_pgvector()
+
 # Create session factory
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
