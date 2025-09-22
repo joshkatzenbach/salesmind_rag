@@ -1,5 +1,7 @@
 # Environment variables
 .env
+config/env.local
+config/env.production
 
 # Python
 __pycache__/
