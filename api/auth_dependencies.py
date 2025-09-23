@@ -3,6 +3,7 @@ Authentication dependencies for FastAPI endpoints.
 """
 
 import traceback
+import os
 from fastapi import HTTPException, Depends, Request, Response
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
@@ -12,6 +13,17 @@ from services.auth_service import AuthService
 
 # Security scheme for API documentation
 security = HTTPBearer(auto_error=False)
+
+# Environment-based cookie security
+def get_cookie_security_settings():
+    """Get cookie security settings based on environment."""
+    is_production = os.getenv("ENVIRONMENT") == "production"
+    return {
+        "secure": is_production,  # Only secure in production (HTTPS)
+        "httponly": True,
+        "samesite": "lax",
+        "max_age": 24 * 60 * 60  # 24 hours
+    }
 
 
 def get_current_user(
@@ -186,13 +198,11 @@ def set_session_cookie(response: Response, session_key: str) -> None:
         response: FastAPI response object
         session_key: Session key to set
     """
+    settings = get_cookie_security_settings()
     response.set_cookie(
         key="session_key",
         value=session_key,
-        httponly=True,
-        secure=True,  # Only send over HTTPS in production
-        samesite="lax",
-        max_age=24 * 60 * 60  # 24 hours in seconds
+        **settings
     )
 
 
@@ -203,9 +213,8 @@ def clear_session_cookie(response: Response) -> None:
     Args:
         response: FastAPI response object
     """
+    settings = get_cookie_security_settings()
     response.delete_cookie(
         key="session_key",
-        httponly=True,
-        secure=True,
-        samesite="lax"
+        **settings
     )
