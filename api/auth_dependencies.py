@@ -59,14 +59,10 @@ def get_current_user(
     user = AuthService.get_user_by_session(db, session_key)
     
     if not user:
-        # Debug information for authentication failure
-        
         traceback.print_exc()
         raise HTTPException(
             status_code=401,
-            detail={
-                "message": "Invalid or expired session. Please log in again.",
-            },
+            detail="Invalid or expired session. Please log in again.",
             headers={"WWW-Authenticate": "Cookie"}
         )
     
