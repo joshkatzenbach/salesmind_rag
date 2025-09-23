@@ -119,7 +119,9 @@ def login_user(
         session_key, session_expires_at = AuthService.login_user(db, user)
         
         # Set secure HTTP-only cookie
+        print(f"🔍 DEBUG: Setting session cookie for user: {user.email}")
         set_session_cookie(response, session_key)
+        print(f"🔍 DEBUG: Session cookie set successfully")
         
         return UserResponse(
             id=user.id,
