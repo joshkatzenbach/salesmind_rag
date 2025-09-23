@@ -12,7 +12,6 @@ from api.schemas import (
     UserRegister, 
     UserLogin, 
     UserResponse, 
-    LoginResponse, 
     LogoutResponse
 )
 from api.auth_dependencies import (
@@ -82,7 +81,7 @@ def register_user(
         raise HTTPException(status_code=500, detail=f"Error creating user: {str(e)}")
 
 
-@router.post("/login", response_model=LoginResponse)
+@router.post("/login", response_model=UserResponse)
 def login_user(
     login_data: UserLogin,
     response: Response,
@@ -122,20 +121,16 @@ def login_user(
         # Set secure HTTP-only cookie
         set_session_cookie(response, session_key)
         
-        return LoginResponse(
-            message="Login successful",
-            user=UserResponse(
-                id=user.id,
-                first_name=user.first_name,
-                last_name=user.last_name,
-                email=user.email,
-                full_name=user.full_name,
-                access_level=user.access_level,
-                query_permission=user.query_permission,
-                created_at=user.created_at,
-                last_login=user.last_login
-            ),
-            session_expires_at=session_expires_at
+        return UserResponse(
+            id=user.id,
+            first_name=user.first_name,
+            last_name=user.last_name,
+            email=user.email,
+            full_name=user.full_name,
+            access_level=user.access_level,
+            query_permission=user.query_permission,
+            created_at=user.created_at,
+            last_login=user.last_login
         )
         
     except HTTPException:
