@@ -17,12 +17,23 @@ This document provides a quick overview of the organized folder structure for th
 - `base.py` - SQLAlchemy declarative base
 - `transcript.py` - Transcript ORM model
 - `chunk.py` - Chunk ORM model for embeddings
+- `user.py` - User ORM model for authentication
 
 #### `services/` - Business Logic
 - `__init__.py` - Package initialization
 - `chunking_service.py` - Text chunking and embedding generation
 - `file_processor.py` - File processing utilities (PDF, DOC, DOCX, TXT)
 - `query_service.py` - Query processing and AI response generation
+- `auth_service.py` - User authentication and session management
+
+#### `api/` - API Endpoints
+- `__init__.py` - Package initialization
+- `schemas.py` - Pydantic models for request/response validation
+- `general_endpoints.py` - General endpoints (health, root)
+- `auth_endpoints.py` - Authentication endpoints (register, login, logout, me)
+- `transcript_endpoints.py` - Transcript management endpoints
+- `query_endpoints.py` - Query endpoints
+- `auth_dependencies.py` - Authentication dependencies and middleware
 
 #### `config/` - Configuration Files
 - `__init__.py` - Package initialization
@@ -78,15 +89,38 @@ The project uses relative imports within packages and absolute imports from the 
 
 ```python
 # In main.py
-from services.query_service import QueryService
-from services.chunking_service import ChunkingService
-from config.db_config import get_db
-from models import Transcript
+from api import general_endpoints, auth_endpoints, transcript_endpoints, query_endpoints
 
-# In services/query_service.py
-from .chunking_service import ChunkingService
-from models.chunk import Chunk
+# In api/auth_endpoints.py
+from api.schemas import UserRegister, UserLogin, UserResponse
+from api.auth_dependencies import get_current_user, set_session_cookie
+from services.auth_service import AuthService
+
+# In services/auth_service.py
+from models.user import User, AccessLevel
+from passlib.context import CryptContext
 ```
+
+## 🔐 Authentication System
+
+The project includes a comprehensive authentication system:
+
+### User Management
+- **Registration**: `POST /auth/register` - Create new users
+- **Login**: `POST /auth/login` - Authenticate and create session
+- **Logout**: `POST /auth/logout` - Clear session
+- **Profile**: `GET /auth/me` - Get current user info
+
+### Access Control
+- **Role-Based**: Admin/Super Admin access for transcript management
+- **Permission-Based**: Query permission required for document queries
+- **Session Management**: 24-hour secure session cookies
+
+### Security Features
+- **Password Hashing**: bcrypt with salts
+- **Session Keys**: Cryptographically secure random tokens
+- **HTTP-Only Cookies**: Secure session storage
+- **Access Levels**: USER, ADMIN, SUPER_ADMIN hierarchy
 
 ## 📋 Benefits of This Structure
 

@@ -3,7 +3,11 @@
 Run the FastAPI application in production mode.
 """
 import os
+import sys
 import uvicorn
+
+# Add the parent directory to the Python path so we can import main
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Set environment to production
 os.environ["ENVIRONMENT"] = "production"
