@@ -59,10 +59,25 @@ def get_current_user(
     user = AuthService.get_user_by_session(db, session_key)
     
     if not user:
+        # Debug information for authentication failure
+        debug_info = {
+            "session_cookie_present": session_key is not None,
+            "session_cookie_preview": session_key[:10] + "..." if session_key else None,
+            "available_cookies": list(request.cookies.keys()),
+            "request_headers": {
+                "user_agent": request.headers.get("user-agent"),
+                "origin": request.headers.get("origin"),
+                "referer": request.headers.get("referer")
+            }
+        }
+        
         traceback.print_exc()
         raise HTTPException(
             status_code=401,
-            detail="Invalid or expired session. Please log in again.",
+            detail={
+                "message": "Invalid or expired session. Please log in again.",
+                "debug": debug_info
+            },
             headers={"WWW-Authenticate": "Cookie"}
         )
     
@@ -117,14 +132,12 @@ def require_access_level(required_level: AccessLevel):
 
 
 def require_admin_access(
-    request: Request,
     current_user: User = Depends(get_current_user)
 ) -> User:
     """
     Require admin or super admin access.
     
     Args:
-        request: FastAPI request object
         current_user: Current authenticated user
         
     Returns:
@@ -134,29 +147,10 @@ def require_admin_access(
         HTTPException: If user doesn't have admin access
     """
     if not current_user.is_admin():
-        # Debug information for admin access failure
-        session_key = request.cookies.get("session_key")
-        debug_info = {
-            "session_cookie_present": session_key is not None,
-            "session_cookie_preview": session_key[:10] + "..." if session_key else None,
-            "user_email": current_user.email,
-            "user_access_level": current_user.access_level.value,
-            "user_is_admin": current_user.is_admin(),
-            "available_cookies": list(request.cookies.keys()),
-            "request_headers": {
-                "user_agent": request.headers.get("user-agent"),
-                "origin": request.headers.get("origin"),
-                "referer": request.headers.get("referer")
-            }
-        }
-        
         traceback.print_exc()
         raise HTTPException(
             status_code=403,
-            detail={
-                "message": "Access denied. Admin privileges required.",
-                "debug": debug_info
-            }
+            detail="Access denied. Admin privileges required."
         )
     return current_user
 
