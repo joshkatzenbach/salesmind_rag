@@ -4,7 +4,7 @@ Transcript-related API endpoints.
 
 import traceback
 import json
-from fastapi import APIRouter, File, UploadFile, Form, HTTPException, Depends, Request
+from fastapi import APIRouter, File, UploadFile, Form, HTTPException, Depends
 from sqlalchemy.orm import Session
 from config.db_config import get_db
 from models import Transcript
@@ -23,7 +23,6 @@ router = APIRouter(prefix="/transcripts", tags=["transcripts"])
 
 @router.get("/metadata")
 def get_transcript_metadata(
-    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin_access)
 ):
@@ -60,27 +59,10 @@ def get_transcript_metadata(
                 "active": transcript.active
             })
         
-        # Debug information
-        session_key = request.cookies.get("session_key")
-        debug_info = {
-            "session_cookie_present": session_key is not None,
-            "session_cookie_preview": session_key[:10] + "..." if session_key else None,
-            "user_email": current_user.email,
-            "user_access_level": current_user.access_level.value,
-            "user_is_admin": current_user.is_admin(),
-            "available_cookies": list(request.cookies.keys()),
-            "request_headers": {
-                "user_agent": request.headers.get("user-agent"),
-                "origin": request.headers.get("origin"),
-                "referer": request.headers.get("referer")
-            }
-        }
-        
         return {
             "transcripts": metadata,
             "count": len(metadata),
-            "status": "success",
-            "debug": debug_info
+            "status": "success"
         }
         
     except Exception as e:
