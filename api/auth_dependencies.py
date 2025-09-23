@@ -20,12 +20,22 @@ def get_cookie_security_settings():
     env = os.getenv("ENVIRONMENT", "local")
     is_production = env == "production"
     print(f"🍪 Cookie settings - Environment: {env}, Secure: {is_production}")
-    return {
+    
+    settings = {
         "secure": is_production,  # Only secure in production (HTTPS)
         "httponly": True,
-        "samesite": "lax",
         "max_age": 24 * 60 * 60  # 24 hours
     }
+    
+    if is_production:
+        # Production settings for cross-origin HTTPS
+        settings["samesite"] = "none"  # Allow cross-origin requests
+        # Don't set domain to allow subdomain access
+    else:
+        # Local development settings
+        settings["samesite"] = "lax"
+    
+    return settings
 
 
 def get_current_user(
