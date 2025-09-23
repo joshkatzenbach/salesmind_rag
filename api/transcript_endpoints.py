@@ -41,7 +41,6 @@ def get_transcript_metadata(
             Transcript.trainer_name,
             Transcript.media_type,
             Transcript.source_url,
-            Transcript.provide_link_to_searcher,
             Transcript.title,
             Transcript.active
         ).all()
@@ -56,7 +55,6 @@ def get_transcript_metadata(
                 "trainer_name": transcript.trainer_name,
                 "media_type": transcript.media_type,
                 "source_url": transcript.source_url,
-                "provide_link_to_searcher": transcript.provide_link_to_searcher,
                 "title": transcript.title,
                 "active": transcript.active
             })
@@ -68,6 +66,8 @@ def get_transcript_metadata(
         }
         
     except Exception as e:
+        print(f"Unexpected error in get_transcript_metadata: {str(e)}")
+        traceback.print_exc()
         raise HTTPException(
             status_code=500,
             detail=f"Error fetching transcript metadata: {str(e)}"
@@ -120,6 +120,8 @@ def toggle_transcript_active(
         # Re-raise HTTP exceptions (like 404)
         raise
     except Exception as e:
+        print(f"Unexpected error in toggle_transcript_active: {str(e)}")
+        traceback.print_exc()
         db.rollback()
         raise HTTPException(
             status_code=500,
@@ -180,6 +182,8 @@ def delete_transcript(
         # Re-raise HTTP exceptions (like 404)
         raise
     except Exception as e:
+        print(f"Unexpected error in delete_transcript: {str(e)}")
+        traceback.print_exc()
         db.rollback()
         raise HTTPException(
             status_code=500,
@@ -228,7 +232,7 @@ async def upload_document(
             trainer_name=document_metadata.trainerName,
             media_type=document_metadata.mediaType,
             source_url=document_metadata.sourceUrl,
-            provide_link_to_searcher=document_metadata.provideLinkToSearcher
+            title=document_metadata.title
         )
         
         # Add to database
@@ -254,7 +258,7 @@ async def upload_document(
         # Re-raise HTTP exceptions from file processor
         raise
     except Exception as e:
-        db.rollback()
-        print(e)
+        print(f"Unexpected error in upload_document: {str(e)}")
         traceback.print_exc()
+        db.rollback()
         raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")

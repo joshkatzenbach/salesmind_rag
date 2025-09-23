@@ -39,8 +39,8 @@ def query_documents(
             "status": "success"
         }
     except Exception as e:
+        print(f"Unexpected error in query_documents: {str(e)}")
         traceback.print_exc()
-        print(e)
         # Handle query processing errors
         raise HTTPException(
             status_code=500,

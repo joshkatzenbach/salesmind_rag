@@ -12,7 +12,7 @@ class DocumentMetadata(BaseModel):
     sourceUrl: Optional[str] = None
     trainerName: Optional[str] = None
     mediaType: Optional[str] = None
-    provideLinkToSearcher: bool = False
+    title: Optional[str] = None
 
 
 class QueryRequest(BaseModel):
@@ -27,14 +27,12 @@ class ToggleActiveRequest(BaseModel):
 class UserRegister(BaseModel):
     first_name: str
     last_name: str
+    email: str
     password: str
-    access_level: Optional[AccessLevel] = AccessLevel.USER
-    query_permission: Optional[bool] = False
 
 
 class UserLogin(BaseModel):
-    first_name: str
-    last_name: str
+    email: str
     password: str
 
 
@@ -42,6 +40,7 @@ class UserResponse(BaseModel):
     id: int
     first_name: str
     last_name: str
+    email: str
     full_name: str
     access_level: AccessLevel
     query_permission: bool

@@ -12,10 +12,14 @@ app = FastAPI(title="SalesMind RAG API", version="1.0.0")
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins
+    allow_origins=[
+        "http://localhost:4200",   # Angular dev
+        "https://https://salesmind-rag.firebaseapp.com",
+        "https://salesmind-rag.web.app",
+    ],
     allow_credentials=True,
-    allow_methods=["*"],  # Allows all methods
-    allow_headers=["*"],  # Allows all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Include routers

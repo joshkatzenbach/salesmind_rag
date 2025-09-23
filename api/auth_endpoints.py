@@ -2,6 +2,7 @@
 Authentication API endpoints.
 """
 
+import traceback
 from fastapi import APIRouter, HTTPException, Depends, Response
 from sqlalchemy.orm import Session
 from config.db_config import get_db
@@ -21,6 +22,12 @@ from api.auth_dependencies import (
 )
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
+
+
+@router.options("/{path:path}")
+def options_handler(path: str):
+    """Handle preflight OPTIONS requests for CORS."""
+    return {"message": "OK"}
 
 
 @router.post("/register", response_model=UserResponse)
@@ -47,15 +54,17 @@ def register_user(
             db=db,
             first_name=user_data.first_name,
             last_name=user_data.last_name,
+            email=user_data.email,
             password=user_data.password,
-            access_level=user_data.access_level or AccessLevel.USER,
-            query_permission=user_data.query_permission or False
+            access_level=AccessLevel.USER,  # Default to USER
+            query_permission=False  # Default to False
         )
         
         return UserResponse(
             id=user.id,
             first_name=user.first_name,
             last_name=user.last_name,
+            email=user.email,
             full_name=user.full_name,
             access_level=user.access_level,
             query_permission=user.query_permission,
@@ -64,8 +73,12 @@ def register_user(
         )
         
     except ValueError as e:
+        print(f"ValueError in register_user: {str(e)}")
+        traceback.print_exc()
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
+        print(f"Unexpected error in register_user: {str(e)}")
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error creating user: {str(e)}")
 
 
@@ -93,8 +106,7 @@ def login_user(
         # Authenticate user
         user = AuthService.authenticate_user(
             db=db,
-            first_name=login_data.first_name,
-            last_name=login_data.last_name,
+            email=login_data.email,
             password=login_data.password
         )
         
@@ -116,6 +128,7 @@ def login_user(
                 id=user.id,
                 first_name=user.first_name,
                 last_name=user.last_name,
+                email=user.email,
                 full_name=user.full_name,
                 access_level=user.access_level,
                 query_permission=user.query_permission,
@@ -128,6 +141,8 @@ def login_user(
     except HTTPException:
         raise
     except Exception as e:
+        print(f"Unexpected error in login_user: {str(e)}")
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error during login: {str(e)}")
 
 
@@ -158,6 +173,8 @@ def logout_user(
         return LogoutResponse(message="Logout successful")
         
     except Exception as e:
+        print(f"Unexpected error in logout_user: {str(e)}")
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error during logout: {str(e)}")
 
 
@@ -178,6 +195,7 @@ def get_current_user_info(
         id=current_user.id,
         first_name=current_user.first_name,
         last_name=current_user.last_name,
+        email=current_user.email,
         full_name=current_user.full_name,
         access_level=current_user.access_level,
         query_permission=current_user.query_permission,

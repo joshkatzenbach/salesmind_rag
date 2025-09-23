@@ -90,7 +90,6 @@ GET /transcripts/metadata
       "trainer_name": "John Doe",
       "media_type": "video",
       "source_url": "https://example.com/video",
-      "provide_link_to_searcher": true,
       "title": "Sales Call - Q3 Review",
       "active": true
     }
@@ -294,7 +293,6 @@ The `transcripts` table includes:
 - `trainer_name`: Optional trainer/salesperson name
 - `media_type`: Optional media type (video, document, etc.)
 - `source_url`: Optional source URL
-- `provide_link_to_searcher`: Boolean flag
 
 ## Deployment
 

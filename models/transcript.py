@@ -24,7 +24,6 @@ class Transcript(Base):
     # Source information
     media_type = Column(String(50), nullable=True)  # maps to mediaType (video, document, etc)
     source_url = Column(String(500), nullable=True)  # maps to sourceUrl
-    provide_link_to_searcher = Column(Boolean, default=False, nullable=False)  # maps to provideLinkToSearcher
     
     # Additional fields
     title = Column(String(255), nullable=True)  # Optional title for the transcript

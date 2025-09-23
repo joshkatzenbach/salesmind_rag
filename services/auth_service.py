@@ -4,6 +4,7 @@ Authentication service for user management, password hashing, and session manage
 
 import secrets
 import hashlib
+import traceback
 from datetime import datetime, timedelta
 from typing import Optional, Tuple
 from sqlalchemy.orm import Session
@@ -80,6 +81,7 @@ class AuthService:
         db: Session,
         first_name: str,
         last_name: str,
+        email: str,
         password: str,
         access_level: AccessLevel = AccessLevel.USER,
         query_permission: bool = False
@@ -91,6 +93,7 @@ class AuthService:
             db: Database session
             first_name: User's first name
             last_name: User's last name
+            email: User's email address (must be unique)
             password: Plain text password
             access_level: User's access level
             query_permission: Whether user can query documents
@@ -98,14 +101,13 @@ class AuthService:
         Returns:
             Created User object
         """
-        # Check if user already exists
-        existing_user = db.query(User).filter(
-            User.first_name == first_name,
-            User.last_name == last_name
-        ).first()
+        # Check if user already exists by email
+        existing_user = db.query(User).filter(User.email == email).first()
         
         if existing_user:
-            raise ValueError("User with this name already exists")
+            print(f"User creation failed: Email {email} already exists")
+            traceback.print_exc()
+            raise ValueError("User with this email already exists")
         
         # Hash the password
         password_hash = AuthService.hash_password(password)
@@ -114,6 +116,7 @@ class AuthService:
         user = User(
             first_name=first_name,
             last_name=last_name,
+            email=email,
             password_hash=password_hash,
             access_level=access_level,
             query_permission=query_permission
@@ -128,31 +131,30 @@ class AuthService:
     @staticmethod
     def authenticate_user(
         db: Session,
-        first_name: str,
-        last_name: str,
+        email: str,
         password: str
     ) -> Optional[User]:
         """
-        Authenticate a user by name and password.
+        Authenticate a user by email and password.
         
         Args:
             db: Database session
-            first_name: User's first name
-            last_name: User's last name
+            email: User's email address
             password: Plain text password
             
         Returns:
             User object if authentication successful, None otherwise
         """
-        user = db.query(User).filter(
-            User.first_name == first_name,
-            User.last_name == last_name
-        ).first()
+        user = db.query(User).filter(User.email == email).first()
         
         if not user:
+            print(f"Authentication failed: No user found with email {email}")
+            traceback.print_exc()
             return None
         
         if not AuthService.verify_password(password, user.password_hash):
+            print(f"Authentication failed: Invalid password for email {email}")
+            traceback.print_exc()
             return None
         
         return user
@@ -221,10 +223,14 @@ class AuthService:
         user = db.query(User).filter(User.session_key == session_key).first()
         
         if not user:
+            print(f"Session validation failed: No user found with session key {session_key}")
+            traceback.print_exc()
             return None
         
         # Check if session is expired
         if AuthService.is_session_expired(user.updated_at):
+            print(f"Session validation failed: Session expired for user {user.email}")
+            traceback.print_exc()
             # Clear expired session
             user.session_key = None
             user.updated_at = datetime.utcnow()

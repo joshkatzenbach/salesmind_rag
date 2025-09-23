@@ -27,6 +27,7 @@ class User(Base):
     # User information
     first_name = Column(String(255), nullable=False)
     last_name = Column(String(255), nullable=False)
+    email = Column(String(255), nullable=False, unique=True, index=True)
     
     # Authentication
     password_hash = Column(String(255), nullable=False)  # Salted, hashed password

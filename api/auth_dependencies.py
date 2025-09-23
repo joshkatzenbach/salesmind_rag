@@ -2,6 +2,7 @@
 Authentication dependencies for FastAPI endpoints.
 """
 
+import traceback
 from fastapi import HTTPException, Depends, Request, Response
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
@@ -44,6 +45,8 @@ def get_current_user(
     user = AuthService.get_user_by_session(db, session_key)
     
     if not user:
+        print(f"Authentication failed: Invalid or expired session for key: {session_key}")
+        traceback.print_exc()
         raise HTTPException(
             status_code=401,
             detail="Invalid or expired session. Please log in again.",
@@ -89,6 +92,8 @@ def require_access_level(required_level: AccessLevel):
         current_user: User = Depends(get_current_user)
     ) -> User:
         if not AuthService.require_access_level(current_user, required_level):
+            print(f"Access denied: User {current_user.email} (level: {current_user.access_level}) attempted to access {required_level.value} endpoint")
+            traceback.print_exc()
             raise HTTPException(
                 status_code=403,
                 detail=f"Access denied. Required access level: {required_level.value}"
@@ -114,6 +119,8 @@ def require_admin_access(
         HTTPException: If user doesn't have admin access
     """
     if not current_user.is_admin():
+        print(f"Access denied: User {current_user.email} (level: {current_user.access_level}) attempted to access admin endpoint")
+        traceback.print_exc()
         raise HTTPException(
             status_code=403,
             detail="Access denied. Admin privileges required."
@@ -137,6 +144,8 @@ def require_super_admin_access(
         HTTPException: If user doesn't have super admin access
     """
     if not current_user.is_super_admin():
+        print(f"Access denied: User {current_user.email} (level: {current_user.access_level}) attempted to access super admin endpoint")
+        traceback.print_exc()
         raise HTTPException(
             status_code=403,
             detail="Access denied. Super admin privileges required."
@@ -160,6 +169,8 @@ def require_query_permission(
         HTTPException: If user doesn't have query permission
     """
     if not current_user.query_permission:
+        print(f"Access denied: User {current_user.email} (query_permission: {current_user.query_permission}) attempted to access query endpoint")
+        traceback.print_exc()
         raise HTTPException(
             status_code=403,
             detail="Access denied. Query permission required."
