@@ -16,6 +16,7 @@ app.add_middleware(
         "http://localhost:4200",   # Angular dev
         "https://https://salesmind-rag.firebaseapp.com",
         "https://salesmind-rag.web.app",
+        "https://salesmind.coach"
     ],
     allow_credentials=True,
     allow_methods=["*"],
