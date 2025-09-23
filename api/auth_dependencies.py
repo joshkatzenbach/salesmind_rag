@@ -17,7 +17,9 @@ security = HTTPBearer(auto_error=False)
 # Environment-based cookie security
 def get_cookie_security_settings():
     """Get cookie security settings based on environment."""
-    is_production = os.getenv("ENVIRONMENT") == "production"
+    env = os.getenv("ENVIRONMENT", "local")
+    is_production = env == "production"
+    print(f"🍪 Cookie settings - Environment: {env}, Secure: {is_production}")
     return {
         "secure": is_production,  # Only secure in production (HTTPS)
         "httponly": True,

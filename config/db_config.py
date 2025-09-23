@@ -11,15 +11,25 @@ from pathlib import Path
 # Get the project root directory
 project_root = Path(__file__).parent.parent
 env = os.getenv("ENVIRONMENT", "local")
-env_file = project_root / f"config/env.{env}"
 
-if env_file.exists():
-    load_dotenv(env_file)
+# For production (Render), load from environment variables directly
+# For local development, load from .env files
+if env == "production":
+    # In production, environment variables are set directly by Render
+    # No need to load from .env files
+    print(f"🔧 Production mode: Using environment variables directly")
 else:
-    # Fallback to .env in project root
-    fallback_env = project_root / ".env"
-    if fallback_env.exists():
-        load_dotenv(fallback_env)
+    # Local development: load from .env files
+    env_file = project_root / f"config/env.{env}"
+    if env_file.exists():
+        load_dotenv(env_file)
+        print(f"🔧 Local mode: Loaded config from {env_file}")
+    else:
+        # Fallback to .env in project root
+        fallback_env = project_root / ".env"
+        if fallback_env.exists():
+            load_dotenv(fallback_env)
+            print(f"🔧 Local mode: Loaded config from {fallback_env}")
 
 # Database configuration from environment variables
 DB_HOST = os.getenv("DB_HOST", "localhost")
@@ -27,6 +37,12 @@ DB_PORT = os.getenv("DB_PORT", "5432")
 DB_NAME = os.getenv("DB_NAME", "salesmind_rag")
 DB_USER = os.getenv("DB_USER", "postgres")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "password")
+
+# Debug: Print environment info (without sensitive data)
+print(f"🔍 Environment: {env}")
+print(f"🔍 DB_HOST: {DB_HOST}")
+print(f"🔍 DB_NAME: {DB_NAME}")
+print(f"🔍 DB_USER: {DB_USER}")
 
 # Construct database URL
 DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"

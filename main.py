@@ -14,7 +14,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:4200",   # Angular dev
-        "https://https://salesmind-rag.firebaseapp.com",
+        "https://salesmind-rag.firebaseapp.com",
         "https://salesmind-rag.web.app",
         "https://salesmind.coach"
     ],
