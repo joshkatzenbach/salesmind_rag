@@ -49,20 +49,22 @@ def get_current_user(
     session_key = request.cookies.get("session_key")
     
     if not session_key:
-        print("🔍 No session cookie found in request")
+        print("🔍 DEBUG: No session cookie found in request")
+        print("🔍 DEBUG: Available cookies:", list(request.cookies.keys()))
         raise HTTPException(
             status_code=401,
             detail="Authentication required. Please log in.",
             headers={"WWW-Authenticate": "Cookie"}
         )
     
-    print(f"🔍 Session cookie found: {session_key[:10]}...")
+    print(f"🔍 DEBUG: Session cookie found: {session_key[:10]}...")
+    print(f"🔍 DEBUG: Full session key: {session_key}")
     
     # Get user by session key
     user = AuthService.get_user_by_session(db, session_key)
     
     if not user:
-        print(f"🔍 Authentication failed: Invalid or expired session for key: {session_key[:10]}...")
+        print(f"🔍 DEBUG: Authentication failed: Invalid or expired session for key: {session_key[:10]}...")
         traceback.print_exc()
         raise HTTPException(
             status_code=401,
@@ -70,7 +72,7 @@ def get_current_user(
             headers={"WWW-Authenticate": "Cookie"}
         )
     
-    print(f"🔍 User authenticated: {user.email} (access_level: {user.access_level})")
+    print(f"🔍 DEBUG: User authenticated: {user.email} (access_level: {user.access_level})")
     return user
 
 
@@ -136,15 +138,15 @@ def require_admin_access(
     Raises:
         HTTPException: If user doesn't have admin access
     """
-    print(f"🔍 Checking admin access for user: {current_user.email} (level: {current_user.access_level})")
+    print(f"🔍 DEBUG: Checking admin access for user: {current_user.email} (level: {current_user.access_level})")
     if not current_user.is_admin():
-        print(f"🚫 Access denied: User {current_user.email} (level: {current_user.access_level}) attempted to access admin endpoint")
+        print(f"🚫 DEBUG: Access denied: User {current_user.email} (level: {current_user.access_level}) attempted to access admin endpoint")
         traceback.print_exc()
         raise HTTPException(
             status_code=403,
             detail="Access denied. Admin privileges required."
         )
-    print(f"✅ Admin access granted for user: {current_user.email}")
+    print(f"✅ DEBUG: Admin access granted for user: {current_user.email}")
     return current_user
 
 
