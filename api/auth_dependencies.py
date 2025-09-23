@@ -51,7 +51,7 @@ def get_current_user(
     if not session_key:
         raise HTTPException(
             status_code=401,
-            detail="Authentication required. Please log in.",
+            detail="No session key found",
             headers={"WWW-Authenticate": "Cookie"}
         )
     
@@ -60,23 +60,12 @@ def get_current_user(
     
     if not user:
         # Debug information for authentication failure
-        debug_info = {
-            "session_cookie_present": session_key is not None,
-            "session_cookie_preview": session_key[:10] + "..." if session_key else None,
-            "available_cookies": list(request.cookies.keys()),
-            "request_headers": {
-                "user_agent": request.headers.get("user-agent"),
-                "origin": request.headers.get("origin"),
-                "referer": request.headers.get("referer")
-            }
-        }
         
         traceback.print_exc()
         raise HTTPException(
             status_code=401,
             detail={
                 "message": "Invalid or expired session. Please log in again.",
-                "debug": debug_info
             },
             headers={"WWW-Authenticate": "Cookie"}
         )
