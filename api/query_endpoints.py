@@ -10,6 +10,7 @@ from services.query_service import QueryService
 from api.schemas import QueryRequest
 from api.auth_dependencies import require_query_permission
 from models.user import User
+from models.query import Query
 
 router = APIRouter(tags=["query"])
 
@@ -31,6 +32,15 @@ def query_documents(
         Query response with answer
     """
     try:
+        # Log the query to the database
+        query_record = Query(
+            user_id=current_user.id,
+            query=request.question
+        )
+        db.add(query_record)
+        db.commit()
+        
+        # Process the query
         answer = QueryService.process_query(request.question, db)
         return {
             "question": request.question,

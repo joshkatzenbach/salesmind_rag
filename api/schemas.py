@@ -59,3 +59,19 @@ class LoginResponse(BaseModel):
 
 class LogoutResponse(BaseModel):
     message: str
+
+
+# User management schemas
+class UserUpdateRequest(BaseModel):
+    access_level: Optional[AccessLevel] = None
+    query_permission: Optional[bool] = None
+
+
+class UserListResponse(BaseModel):
+    users: list[UserResponse]
+    total: int
+
+
+class UserUpdateResponse(BaseModel):
+    message: str
+    user: UserResponse

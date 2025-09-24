@@ -12,31 +12,42 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 env = os.getenv("ENVIRONMENT", "local")
 
-# For production (Render), load from environment variables directly
-# For local development, load from .env files
-if env == "production":
-    # In production, environment variables are set directly by Render
-    # No need to load from .env files
-    print(f"🔧 Production mode: Using environment variables directly")
+# Load environment variables from appropriate .env file
+env_file = project_root / f"config/env.{env}"
+if env_file.exists():
+    load_dotenv(env_file)
+    print(f"🔧 {env.title()} mode: Loaded config from {env_file}")
 else:
-    # Local development: load from .env files
-    env_file = project_root / f"config/env.{env}"
-    if env_file.exists():
-        load_dotenv(env_file)
-        print(f"🔧 Local mode: Loaded config from {env_file}")
+    if env == "production":
+        # In production (Render), environment variables are set directly
+        print(f"🔧 Production mode: Using environment variables directly")
     else:
-        # Fallback to .env in project root
+        # Fallback to .env in project root for local development
         fallback_env = project_root / ".env"
         if fallback_env.exists():
             load_dotenv(fallback_env)
             print(f"🔧 Local mode: Loaded config from {fallback_env}")
 
 # Database configuration from environment variables
-DB_HOST = os.getenv("DB_HOST", "localhost")
-DB_PORT = os.getenv("DB_PORT", "5432")
-DB_NAME = os.getenv("DB_NAME", "salesmind_rag")
-DB_USER = os.getenv("DB_USER", "postgres")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "password")
+# No defaults - fail fast if environment variables are not set
+DB_HOST = os.getenv("DB_HOST")
+DB_PORT = os.getenv("DB_PORT")
+DB_NAME = os.getenv("DB_NAME")
+DB_USER = os.getenv("DB_USER")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
+
+# Validate that all required environment variables are set
+required_vars = {
+    "DB_HOST": DB_HOST,
+    "DB_PORT": DB_PORT,
+    "DB_NAME": DB_NAME,
+    "DB_USER": DB_USER,
+    "DB_PASSWORD": DB_PASSWORD
+}
+
+missing_vars = [var for var, value in required_vars.items() if value is None]
+if missing_vars:
+    raise ValueError(f"Missing required environment variables: {', '.join(missing_vars)}")
 
 # Debug: Print environment info (without sensitive data)
 print(f"🔍 Environment: {env}")
@@ -45,7 +56,11 @@ print(f"🔍 DB_NAME: {DB_NAME}")
 print(f"🔍 DB_USER: {DB_USER}")
 
 # Construct database URL
-DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+# For production databases (like Render), add SSL requirement
+if env == "production":
+    DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}?sslmode=require"
+else:
+    DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
 # Create SQLAlchemy engine
 engine = create_engine(DATABASE_URL)

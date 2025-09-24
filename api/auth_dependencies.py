@@ -19,7 +19,6 @@ def get_cookie_security_settings():
     """Get cookie security settings based on environment."""
     env = os.getenv("ENVIRONMENT", "local")
     is_production = env == "production"
-    print(f"🍪 Cookie settings - Environment: {env}, Secure: {is_production}")
     
     settings = {
         "secure": is_production,  # Only secure in production (HTTPS)
@@ -180,6 +179,7 @@ def require_query_permission(
 ) -> User:
     """
     Require query permission.
+    Admins and super admins always have query permission regardless of the flag.
     
     Args:
         current_user: Current authenticated user
@@ -190,6 +190,11 @@ def require_query_permission(
     Raises:
         HTTPException: If user doesn't have query permission
     """
+    # Admins and super admins always have query permission
+    if current_user.is_admin():
+        return current_user
+    
+    # Regular users need the query_permission flag
     if not current_user.query_permission:
         print(f"Access denied: User {current_user.email} (query_permission: {current_user.query_permission}) attempted to access query endpoint")
         traceback.print_exc()

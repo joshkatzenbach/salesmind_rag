@@ -57,3 +57,6 @@ class User(Base):
     def is_super_admin(self) -> bool:
         """Check if user has super admin privileges."""
         return self.access_level == AccessLevel.SUPER_ADMIN
+    
+    # Relationship to queries
+    queries = relationship("Query", back_populates="user")
